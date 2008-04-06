@@ -51,15 +51,15 @@ That's it for {{{source}}}!
 
 == Splitting word boundaries ==
 
-Our map function will take each book's contents, split it up into words, and return each word as an _intermediate result_. The octo.py (like MapReduce), requires the map function be called {{{mapfn()}}} and that each intermediate result be a key-value pair. We'll just return a 1 as the other half of the pair, i.e. (_word_, 1).
+Our map function will take each book's contents, split it up into words, and return each word as an _intermediate result_. Octo.py requires the map function be called {{{mapfn()}}} and (like MapReduce) that each intermediate result be a key-value pair. We'll just return a 1 as the other half of the pair, i.e. (_word_, 1).
 
-To determine word boundaries, we will just use Python's built-in split() function for strings. There are more accurate ways to determine word boundaries, but for the purposes of this example, we will just use the simple method.
+To determine word boundaries, we will just use Python's built-in {{{split()}}} function for strings. There are more accurate ways to determine word boundaries, but for the purposes of this example, we will just use the simple method. We will also normalize the words using {{{lower()}}}.
 
 {{{
 def mapfn(key, value):
     for line in value.splitlines():
         for word in line.split():
-            yield word, 1
+            yield word.lower(), 1
 }}}
 
 If you're not familiar with the {{{yield}}} statement, I encourage you to read the Python [http://docs.python.org/ref/yield.html reference] and [http://docs.python.org/whatsnew/pep-342.html PEP] on it. We could store all the words in a list and return that, but that would take a lot of memory---even more than the memory used to store the entire book.
@@ -104,10 +104,20 @@ That will start the octo.py server. It will take a moment to get a list of the b
 
 {{{python octo.py client SERVER_ADDRESS}}}
 
-Where {{{SERVER_ADDRESS}}} is the host name or IP address of the server. The octo.py client will automatically download a copy of the wordcount.py script and then ask the server what to do. If you're running all the copies on a single computer, you would type:
+Where {{{SERVER_ADDRESS}}} is the host name or IP address of the server. The octo.py client will automatically download a copy of the {{{wordcount.py}}} script and then ask the server what to do. If you're running all the copies on a single computer, you would type:
 
 {{{python octo.py client localhost}}}
 
 == What runs where ==
 
 The server is only concerned with the {{{source}}} and {{{final()}}} parts of the script, while the clients run {{{mapfn()}}} and {{{reducefn()}}}. This is why we put the {{{print}}} statement in {{{final()}}} instead of {{{reducefn()}}}---if we didn't, the final results will be printed on each of the respective clients instead of being collated by the server.
+
+Depending on the speed of the cluster (or single computer), this will take a short while or much longer and eventually you will see the words and their counts being displayed on the server.
+
+= Behind the scenes =
+
+Octo.py assigns tasks on a first-come-first-serve basis. Initially, the tasks are all map operations on the {{{source}}}. Each client that connects will get a task, work on the task, and report the results. The server will store these intermediate results. Then the cycle repeats until all map tasks are done. The server then switches to the reduce phase and begins handing out reduce jobs, based on the intermediate results, to the clients. For the clients, the reduce jobs happen much the same way. And when the last reduce job is done, the server checks for a {{{final()}}} function. If one is available, it will be run on the final results.
+
+Octo.py currently supports only one method for communication between the client and the server. This is using its own internal network protocol. In future, other protocols like SSH and HTTP may be added. You may also add your own by extending {{{TaskServer}}} and {{{TaskClient}}}. Refer to the DevelopersGuide for more information.
+
+The current implementation of octo.py assumes that all the clients are reliable and will report back with results. It will not retry tasks or assign a single task to multiple clients. This will likely change in the near future.
