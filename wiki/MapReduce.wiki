@@ -1,5 +1,3 @@
-#Google MapReduce
-
 = Introduction =
 
 Google's famous MapReduce approach is described here: http://labs.google.com/papers/mapreduce.html.
