@@ -1,0 +1,49 @@
+Interested in using octo.py? You're in the right place.
+
+= Introduction =
+
+Octo.py was intended to make distributed computing easy for Python programmers. There are only a few simple requirements:
+
+* A Python installation
+* A program you want to parallelize
+* Several computers connected by a network
+* octo.py itself
+* A parallel computing mindset
+
+Of all these requirements, the last is probably the hardest. This User's Guide will walk you through the process of parallelizing a task and running octo.py.
+
+= Your first octo.py =
+
+== Word counts ==
+
+This example is borrowed from the Google paper on MapReduce. The task is to count the occurrences of words in a collection of documents.
+
+We will try to count the word frequencies in books from the Project Gutenberg. I'll be using the March 2007 Sci-fi CD collection, but any of the collections from the Project Gutenberg [http://www.gutenberg.org/wiki/Gutenberg:The_CD_and_DVD_Project download page] will do.
+
+== Parts of an octo.py script ==
+
+An octo.py script has 4 parts: the source of the data, a map function, a reduce function, and a function that's called on the final results.
+
+The source of the data is a dictionary, or dictionary-like object, that contains a list of keys and values. In this case, the keys will be the file names of the books from Project Gutenberg and the values will be the actual contents of the books.
+
+The Sci-fi collection weighs in at 153 MB, not too large to fit entirely in memory for most computers. This makes things a little easier for us. We'll take a look at how to deal with large data sets, too big for main memory, in the advanced section of this guide. For now, everything will be loaded into memory.
+
+To let octo.py know of our data source, the dictionary will have to be stored in a variable called {{{source}}}. We'll use Python's {{{glob}}} module to get a list of all the text files (those with the {{{.txt}}} extension) in the directory. We'll then loop through each file, read the contents, and store the file name and contents in the dictionary.
+
+{{{
+import glob
+
+text_files = glob.glob('Gutenberg SF/*.txt')
+
+def file_contents(file_name):
+    f = open(file_name)
+    try:
+        return f.read()
+    finally:
+        f.close()
+
+source = dict((file_name, file_contents(file_name))
+              for file_name in text_files)
+}}}
+
+That's it for {{{source}}}!
