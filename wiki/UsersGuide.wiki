@@ -104,8 +104,10 @@ That will start the octo.py server. It will take a moment to get a list of the b
 
 {{{python octo.py client SERVER_ADDRESS}}}
 
-Where {{{SERVER_ADDRESS}}} is the host name or IP address of the server. The octo.py client will automatically download a copy of the wordcount.py script and then ask the server what to do.
+Where {{{SERVER_ADDRESS}}} is the host name or IP address of the server. The octo.py client will automatically download a copy of the wordcount.py script and then ask the server what to do. If you're running all the copies on a single computer, you would type:
+
+{{{python octo.py client localhost}}}
 
 == What runs where ==
 
-The server is only concerned with the {{{source}}} and {{{final()}}} parts of the script, while the clients run {{{mapfn()}}} and {{{reducefn()}}}. This is why we put the {{{print}}} statement in {{{final()}}}---if we didn't, the final results will be printed on each of the respective clients instead of being collated by the server.
+The server is only concerned with the {{{source}}} and {{{final()}}} parts of the script, while the clients run {{{mapfn()}}} and {{{reducefn()}}}. This is why we put the {{{print}}} statement in {{{final()}}} instead of {{{reducefn()}}}---if we didn't, the final results will be printed on each of the respective clients instead of being collated by the server.
