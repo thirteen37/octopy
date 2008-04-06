@@ -24,6 +24,7 @@ We will try to count the word frequencies in books from the Project Gutenberg. I
 
 An octo.py script has 4 parts: the source of the data, a map function, a reduce function, and a function that's called on the final results.
 
+== Data source ==
 The source of the data is a dictionary, or dictionary-like object, that contains a list of keys and values. In this case, the keys will be the file names of the books from Project Gutenberg and the values will be the actual contents of the books.
 
 The Sci-fi collection weighs in at 153 MB, not too large to fit entirely in memory for most computers. This makes things a little easier for us. We'll take a look at how to deal with large data sets, too big for main memory, in the advanced section of this guide. For now, everything will be loaded into memory.
@@ -48,7 +49,9 @@ source = dict((file_name, file_contents(file_name))
 
 That's it for {{{source}}}!
 
-Our map function will take each book's contents, split it up into words, and return each word as an _intermediate result_. The octo.py (like MapReduce), requires the map function be called {{{mapfn}}} and that each intermediate result be a key-value pair. We'll just return a 1 as the other half of the pair, i.e. '(_word_, 1)'.
+== Splitting word boundaries ==
+
+Our map function will take each book's contents, split it up into words, and return each word as an _intermediate result_. The octo.py (like MapReduce), requires the map function be called {{{mapfn()}}} and that each intermediate result be a key-value pair. We'll just return a 1 as the other half of the pair, i.e. (_word_, 1).
 
 To determine word boundaries, we will just use Python's built-in split() function for strings. There are more accurate ways to determine word boundaries, but for the purposes of this example, we will just use the simple method.
 
@@ -61,4 +64,48 @@ def mapfn(key, value):
 
 If you're not familiar with the {{{yield}}} statement, I encourage you to read the Python [http://docs.python.org/ref/yield.html reference] and [http://docs.python.org/whatsnew/pep-342.html PEP] on it. We could store all the words in a list and return that, but that would take a lot of memory---even more than the memory used to store the entire book.
 
-Next up is the reduce function, called, rather plainly, {{{reducefn}}}. Octo.py will give the reduce function a key-value pair derived from the intermediate results. {{{mapfn}}} already produces pairs in the form of (word, 1).
+== Counting the words ==
+
+Next up is the reduce function, called, rather plainly, {{{reducefn()}}}. Octo.py will give the reduce function a key-value pair derived from the intermediate results.
+
+{{{mapfn()}}} already produces intermediate key-value pairs of (_word_, 1). Octo.py will then combine all values with the same key into a list. The intermediate key, and the list of intermediate values are the ones passed to {{{reducefn()}}}. In this case, the key-value given to {{{reducefn()}}} will be something like (_word_, [1, 1, 1, 1, ..., 1, 1, 1]). The job of the reduce function is to sum/count these tallies and return a key-value pair indicating the count for each word.
+
+{{{
+def reducefn(key, value):
+    return key, len(value)
+}}}
+
+Now we have the number of occurrences of every word. That was easy wasn't it? But what will we do with these results? That's where {{{final()}}} comes in. For this simple program, we will just print out the counts of all the words.
+
+== Printing the results ==
+
+{{{
+def final(key, value):
+    print key, value
+}}}
+
+Notice that {{{final()}}} is also called with the key-value pair produced from {{{reducefn()}}}.
+
+That's all to it. You can save the code as {{{wordcount.py}}} or download the entire source of this program in the *Downloads* section.
+
+== Running the script ==
+
+You will need a copy of octo.py on each computer you plan to use for counting. If you don't have any other computer handy, you can just run multiple copies of octo.py on a single computer just to see how it works.
+
+One computer (or copy of octo.py) will be the "server." It is responsible for producing the initial data, assigning the tasks, and finally collating all the data. The "clients" will just do what the server tells them to do.
+
+On the server, we run octo.py with the {{{wordcount.py}}} script like this:
+
+{{{python octo.py server wordcount.py}}}
+
+(Details of running a Python script can be found in the documentation appropriate for your platform.)
+
+That will start the octo.py server. It will take a moment to get a list of the books and to read all of them to memory. When it's done, we can start the clients:
+
+{{{python octo.py client SERVER_ADDRESS}}}
+
+Where {{{SERVER_ADDRESS}}} is the host name or IP address of the server. The octo.py client will automatically download a copy of the wordcount.py script and then ask the server what to do.
+
+== What runs where ==
+
+The server is only concerned with the {{{source}}} and {{{final()}}} parts of the script, while the clients run {{{mapfn()}}} and {{{reducefn()}}}. This is why we put the {{{print}}} statement in {{{final()}}}---if we didn't, the final results will be printed on each of the respective clients instead of being collated by the server.
