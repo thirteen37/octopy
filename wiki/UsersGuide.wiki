@@ -116,8 +116,47 @@ Depending on the speed of the cluster (or single computer), this will take a sho
 
 = Behind the scenes =
 
+== Task scheduling ==
+
 Octo.py assigns tasks on a first-come-first-serve basis. Initially, the tasks are all map operations on the {{{source}}}. Each client that connects will get a task, work on the task, and report the results. The server will store these intermediate results. Then the cycle repeats until all map tasks are done. The server then switches to the reduce phase and begins handing out reduce jobs, based on the intermediate results, to the clients. For the clients, the reduce jobs happen much the same way. And when the last reduce job is done, the server checks for a {{{final()}}} function. If one is available, it will be run on the final results.
+
+The current implementation of octo.py assumes that all the clients are reliable and will report back with results. It will not retry tasks or assign a single task to multiple clients. This will likely change in the near future.
+
+== Network protocol ==
 
 Octo.py currently supports only one method for communication between the client and the server. This is using its own internal network protocol. In future, other protocols like SSH and HTTP may be added. You may also add your own by extending {{{TaskServer}}} and {{{TaskClient}}}. Refer to the DevelopersGuide for more information.
 
-The current implementation of octo.py assumes that all the clients are reliable and will report back with results. It will not retry tasks or assign a single task to multiple clients. This will likely change in the near future.
+== Large datasets ==
+
+There are several issues with large datasets, but only one thing to remember: we are _not_ Google. Octo.py is targeted as smaller problems and does not strive to mimic MapReduce exactly. Handling large data sets is possible, but it isn't handled as transparently as with MapReduce. Future versions of octo.py may offer some additional functionality to alleviate this.
+
+=== Memory ===
+
+The first issue with large data sets is memory. The word-counting example above loads all the data into the memory of the server. Hardly efficient, considering the data is most likely used only once. An alternative method is to present a dictionary-like object that loads the data on demand:
+
+{{{
+class DataSource(object):
+    def __init__(self):
+        self.text_files = glob.glob('Gutenberg SF/*.txt')
+
+    def __len__(self):
+        return len(self.text_files)
+
+    def __iter__(self):
+        return iter(self.text_files)
+
+    def __getitem__(self, key):
+        f = open(key)
+        try:
+            return f.read()
+        finally:
+            f.close()
+
+source = DataSource()
+}}}
+
+Here, the {{{DataSource}}} object maintains only a list of file names. As each file name is retrieved via {{{__getitem__()}}}, it is opened, read, and the contents returned. You don't need to implement all dictionary methods, only {{{__iter__()}}} and {{{__getitem__()}}}.
+
+=== Network ===
+
+The next issue with large data sets is the network. MapReduce has the distributed Google File System to help it, but octo.py uses a centralized server to distribute and store all results and this will be the bottleneck for network operations. The current network protocol does compress data, so that the issue isn't so obvious with the textual data in the word-counting example above. However, if you're going to do the same with large images, say, for medical image processing, you will find that the technique above doesn't work very well.
