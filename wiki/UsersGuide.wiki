@@ -4,11 +4,11 @@ Interested in using octo.py? You're in the right place.
 
 Octo.py was intended to make distributed computing easy for Python programmers. There are only a few simple requirements:
 
-* A Python installation
-* A program you want to parallelize
-* Several computers connected by a network
-* octo.py itself
-* A parallel computing mindset
+ * A Python installation
+ * A program you want to parallelize
+ * Several computers connected by a network
+ * octo.py itself
+ * A parallel computing mindset
 
 Of all these requirements, the last is probably the hardest. This User's Guide will walk you through the process of parallelizing a task and running octo.py.
 
