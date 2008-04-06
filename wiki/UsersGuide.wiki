@@ -114,6 +114,12 @@ The server is only concerned with the {{{source}}} and {{{final()}}} parts of th
 
 Depending on the speed of the cluster (or single computer), this will take a short while or much longer and eventually you will see the words and their counts being displayed on the server.
 
+Notice that you don't need to worry about network issues (other than the IP address of the server), or synchronization issues typical of multi-threaded programs. This is all handled transparently by octo.py. All you need to worry about is the actual computation itself, and that only involves a handful of methods.
+
+= How to distribute everything (and maybe solve world hunger in the process) =
+
+WORK IN PROGRESS
+
 = Behind the scenes =
 
 == Task scheduling ==
