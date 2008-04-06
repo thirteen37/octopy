@@ -1,5 +1,3 @@
-#Example usage
-
 = Examples =
 
 == Triangular numbers ==
