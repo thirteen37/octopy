@@ -48,7 +48,7 @@ source = dict((file_name, file_contents(file_name))
 
 That's it for {{{source}}}!
 
-Our map function will take each book's contents, split it up into words, and return each word as an *intermediate result*. The octo.py (like MapReduce), requires that each intermediate result be a key-value pair. We'll just return a 1 as the other half of the pair, i.e. (word, 1).
+Our map function will take each book's contents, split it up into words, and return each word as an _intermediate result_. The octo.py (like MapReduce), requires the map function be called {{{mapfn}}} and that each intermediate result be a key-value pair. We'll just return a 1 as the other half of the pair, i.e. '(_word_, 1)'.
 
 To determine word boundaries, we will just use Python's built-in split() function for strings. There are more accurate ways to determine word boundaries, but for the purposes of this example, we will just use the simple method.
 
@@ -60,3 +60,5 @@ def mapfn(key, value):
 }}}
 
 If you're not familiar with the {{{yield}}} statement, I encourage you to read the Python [http://docs.python.org/ref/yield.html reference] and [http://docs.python.org/whatsnew/pep-342.html PEP] on it. We could store all the words in a list and return that, but that would take a lot of memory---even more than the memory used to store the entire book.
+
+Next up is the reduce function, called, rather plainly, {{{reducefn}}}. Octo.py will give the reduce function a key-value pair derived from the intermediate results. {{{mapfn}}} already produces pairs in the form of (word, 1).
